@@ -1,13 +1,16 @@
+// Node representation metrics
 const squareSize = 16;
 const gap = 3;
 const border = 8;
 const inner_space = 3;
 
+// Don't touch
 const not_traversable = -1;
 const off_path = 0;
 const on_path = 1;
 const expanded = 2;
 
+// Interface colors
 const off_path_color = "grey";
 const on_path_color = "green";
 const expanded_color = "blue";
@@ -20,23 +23,21 @@ const select_node_color = "purple";
 // Normalize this
 const wall_density = 1/5;
 
+// HTML5 stuff
 window.onload = init;
-
 var canvas = null;
 var canvasContext = null;
 var mouseX = 0, mouseY = 0;
 
+// App state defaults
 var nodeArray = null;
 var wide = 0;
 var high = 0;
 var length = 0;
-
 var goalIndex = 0;
 var startIndex = 0;
 
-function dotproduct(a,b) {
-    return (a.x * b.x) + (a.y * b.y);
-}
+function dotproduct(a,b) { return (a.x * b.x) + (a.y * b.y); }
 
 function init()
 {
