@@ -21,7 +21,7 @@ const goal_node_color = "green";
 const select_node_color = "purple";
 
 // Normalize this
-const wall_density = 1/5;
+const wall_density = 1/7;
 
 // HTML5 stuff
 window.onload = init;
@@ -196,6 +196,21 @@ function configureEventBindings()
 {
     // Set up click handlers
     window.onmousemove = mouseHandler;
+    
+    window.onmousedown = function () {
+        var ind = mouseX + mouseY * wide;
+        if (ind == goalIndex || ind < 0 || ind >= length) return true;
+        if (nodeArray[ind] == not_traversable) return false;
+        
+        var oldGoalX = goalIndex % wide;
+        var oldGoalY = (goalIndex - oldGoalX) / wide;
+        
+        goalIndex = ind;
+        updateSquare(mouseX, mouseY);
+        updateSquare(oldGoalX, oldGoalY);
+        
+        return false;
+    }
 }
 
 function mouseHandler(evt) 
