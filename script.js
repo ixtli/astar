@@ -204,6 +204,9 @@ function configureEventBindings()
 
 function newSearch()
 {
+    if (nodeArray[0] != not_traversable)
+        nodeArray[0] = off_path;
+    
     for (var i = length - 1; i > 0; i--)
     {
         if (nodeArray[i] != not_traversable)
