@@ -370,7 +370,7 @@ function astar(n, goal)
 
 function knightsActions(n, goal)
 {
-    ret = new Array(8);
+    var ret = new Array(8);
     var x = 0, y = 0;
     i = 0;
     
