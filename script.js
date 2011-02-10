@@ -20,8 +20,8 @@ const start_node_color = "blue";
 const goal_node_color = "green";
 const select_node_color = "purple";
 
-// Normalize this
-const wall_density = 1/7;
+// Normalize!
+const wall_density = 0;
 
 // HTML5 stuff
 window.onload = init;
@@ -66,7 +66,7 @@ function init()
             nodeArray[i] = not_traversable;
     }
     
-    startIndex = 0;
+    startIndex = 5 + 5 * wide;
     goalIndex = length - 1;
     
     updateMap();
@@ -130,7 +130,7 @@ function updateMap()
         }
     }
     var t1 = new Date();
-    console.log("Update map:" + (t1-t0) + "ms");
+    // console.log("Update map:" + (t1-t0) + "ms");
 }
 
 function updateSquare(x,y)
@@ -196,21 +196,38 @@ function configureEventBindings()
 {
     // Set up click handlers
     window.onmousemove = mouseHandler;
+    window.onmousedown = mousedownHandler;
+}
+
+function mousedownHandler(evt)
+{
+    var ind = mouseX + mouseY * wide;
+    if (ind == goalIndex || ind < 0 || ind >= length) return true;
+    if (nodeArray[ind] == not_traversable) return false;
     
-    window.onmousedown = function () {
-        var ind = mouseX + mouseY * wide;
-        if (ind == goalIndex || ind < 0 || ind >= length) return true;
-        if (nodeArray[ind] == not_traversable) return false;
-        
-        var oldGoalX = goalIndex % wide;
-        var oldGoalY = (goalIndex - oldGoalX) / wide;
-        
-        goalIndex = ind;
-        updateSquare(mouseX, mouseY);
-        updateSquare(oldGoalX, oldGoalY);
-        
-        return false;
+    var oldGoalX = goalIndex % wide;
+    var oldGoalY = (goalIndex - oldGoalX) / wide;
+    
+    goalIndex = ind;
+    updateSquare(mouseX, mouseY);
+    updateSquare(oldGoalX, oldGoalY);
+    
+    for (var i = length - 1; i > 0; i--)
+    {
+        if (Math.random() > wall_density)
+            nodeArray[i] = off_path;
+        else
+            nodeArray[i] = not_traversable;
     }
+    
+    var t0 = new Date();
+    astar({y:5, x:5}, {x:mouseX, y:mouseY});
+    var t1 = new Date();
+    
+    console.log("Search took "+ (t1-t0)+"ms.");
+    updateMap();
+    
+    return false;
 }
 
 function mouseHandler(evt) 
@@ -228,5 +245,209 @@ function mouseHandler(evt)
     updateSquare(mouseX, mouseY);
     
     return false;
+}
+
+function manhattanDistance(x, g)
+{
+    return (Math.abs(g.y - x.y) + Math.abs(g.x - x.x));
+}
+
+function astar(n, goal)
+{
+    n.g = 0;
+    n.cost = knightsMoveHeuristic(n, goal);
+    
+    frontier = [n];
+    explored = [];
+    
+    var path_cost = 0;
+    var node = null;
+    var expansion = new Array(8);
+    var test = false;
+    var temp = null;
+    var found = 0;
+    do {
+        if (frontier.length == 0) return false;
+        node = frontier.pop();
+        if (node.x == goal.x && node.y == goal.y) return node;
+        explored.push(node);
+        nodeArray[node.x + (node.y*wide)] = expanded;
+        expansion = knightsActions(node, goal);
+        for (var i = 0; i < expansion.length; i++)
+        {
+            temp = expansion[i];
+            if (temp == null) continue;
+            
+            // Is child in explored or frontier?
+            test = false;
+            for (var j = 0; j < explored.length; j++)
+            {
+                if (explored[j].x == temp.x && explored[j].y == temp.y)
+                {
+                    test = true;
+                    break;
+                }
+            }
+            
+            if (test == false)
+            {
+                
+                // In frontier?
+                for (var j = 0; j < frontier.length; j++)
+                {
+                    if (frontier[j].x == temp.x && frontier[j].y == temp.y)
+                    {
+                        test = true;
+                        found = j;
+                        break;
+                    }
+                }
+                
+                // If not, add it
+                if (test == false)
+                {
+                    if (frontier.length == 0)
+                    {
+                        frontier[0] = temp;
+                        continue;
+                    }
+                    
+                    // put this in the frontier
+                    for (var j = 0; j < frontier.length; j++)
+                    {
+                        if (temp.cost < frontier[j].cost)
+                        {
+                            frontier.splice(j, 0, temp);
+                            break;
+                        }
+                    }
+                } else {
+                    // is in frontier but not in explored
+                    if (temp.cost < frontier[found].cost)
+                        frontier[found] = temp;
+                }
+            }
+        }
+        
+    } while (true);
+}
+
+function knightsActions(n, goal)
+{
+    ret = new Array(8);
+    var x = 0, y = 0;
+    i = 0;
+    
+    x = n.x - 1; y = n.y - 2;
+    if (x >= 0 && y >= 0)
+        ret[i] = {x:x, y:y};
+    else
+        ret[i] = null;
+    
+    i++;
+    x = n.x + 1; y = n.y - 2;
+    if (x < wide && y >= 0)
+        ret[i] = {x:x, y:y};
+    else
+        ret[i] = null;
+    
+    i++;
+    x = n.x - 1; y = n.y + 2;
+    if (x >= 0 && y < high)
+        ret[i] = {x:x, y:y};
+    else
+        ret[i] = null;
+    
+    i++;
+    x = n.x + 1; y = n.y + 2;
+    if (x < wide && y < high)
+        ret[i] = {x:x, y:y};
+    else
+        ret[i] = null;
+    
+    i++;
+    x = n.x - 2; y = n.y - 1;
+    if (x >= 0 && y >= 0)
+        ret[i] = {x:x, y:y};
+    else
+        ret[i] = null;
+    
+    i++;
+    x = n.x - 2; y = n.y + 1;
+    if (x >= 0 && y < high)
+        ret[i] = {x:x, y:y};
+    else
+        ret[i] = null;
+    
+    i++;
+    x = n.x + 2; y = n.y - 1;
+    if (x < wide && y >= 0)
+        ret[i] = {x:x, y:y};
+    else
+        ret[i] = null;
+    
+    i++;
+    x = n.x + 2; y = n.y + 1;
+    if (x < wide && y < high)
+        ret[i] = {x:x, y:y};
+    else
+        ret[i] = null;
+    
+    for (var i = 0; i < ret.length; i++)
+    {
+        if (ret[i] == null) continue;
+        
+        ret[i].g = 1 + n.g;
+        ret[i].cost = ret[i].g + knightsMoveHeuristic(ret[i], goal);
+    }
+    
+    return ret;
+}
+
+function knightsMoveHeuristic(x, g)
+{
+    // Return the amount of moves from location x to g
+    dist = manhattanDistance(x, g);
+    
+    // We're not the same node, are we?
+    if ( dist == 0 ) return 0;
+    
+    // Magic!
+    var quot = Math.floor(dist / 3);
+    if (dist > 3) dist % 3;
+    
+    switch (dist)
+    {
+        case 1:
+        // The case that it's closer in distance than any legal move
+        // one block up/left/down/right
+        return quot + 3;
+        break;
+        
+        case 2:
+        // one block diagonally in any direction, or two straight
+        return quot + 2;
+        break;
+        
+        case 3:
+        // The case where it's within the distance of a legal move
+        // It /is/ a legal move
+        if (x.x != g.x && x.y != g.y)
+            return quot + 1;
+        // It's three blocks up/left/down/right from us
+        return quot + 3;
+        break;
+        
+        default:
+        case 0:
+        // This is the only place our estimate breaks down.  If the remainder
+        // is zero, when you got within three spaces from the goal you could
+        // be within one move, or in the (x->x != g->x || x->y != g->y) case.
+        // If THAT were true you'd have to add 3.  However, we can remain
+        // admissable by assuming the best case (shortest path) scenario and
+        // saying that it will only take 1 move.
+        return quot + 1;
+        break;
+    }
 }
 
