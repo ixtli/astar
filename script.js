@@ -21,7 +21,7 @@ const goal_node_color = "green";
 const select_node_color = "purple";
 
 // Normalize!
-const wall_density = 1/7;
+const wall_density = 1/5;
 
 // HTML5 stuff
 window.onload = init;
@@ -202,19 +202,8 @@ function configureEventBindings()
     window.onresize = init;
 }
 
-function mousedownHandler(evt)
+function newSearch()
 {
-    var ind = mouseX + mouseY * wide;
-    if (ind == goalIndex || ind < 0 || ind >= length) return true;
-    if (nodeArray[ind] == not_traversable) return false;
-    
-    var oldGoalX = goalIndex % wide;
-    var oldGoalY = (goalIndex - oldGoalX) / wide;
-    
-    goalIndex = ind;
-    updateSquare(mouseX, mouseY);
-    updateSquare(oldGoalX, oldGoalY);
-    
     for (var i = length - 1; i > 0; i--)
     {
         if (nodeArray[i] != not_traversable)
@@ -235,17 +224,41 @@ function mousedownHandler(evt)
         nodeArray[e[i].x + (e[i].y*wide)] = expanded;
     }
     
-    var n = result.r;
-    if (n != null)
+    var count = -1;
+    if (result.r != null)
     {
+        var n = result.r;
         while (n.prev != null)
         {
             nodeArray[n.x + n.y * wide] = on_path;
             n = n.prev;
+            count++;
         }
     }
     
+    document.getElementById('time').innerHTML = "Search time: "+ (t1-t0) + "ms";
+    document.getElementById('count').innerHTML = "Expanded nodes: "+ e.length +
+        " / " + length;
+    document.getElementById('path').innerHTML = "Path length: " + (count > -1 ?
+        count : "No path.");
+    
     updateMap();
+}
+
+function mousedownHandler(evt)
+{
+    var ind = mouseX + mouseY * wide;
+    if (ind == goalIndex || ind < 0 || ind >= length) return true;
+    if (nodeArray[ind] == not_traversable) return false;
+    
+    var oldGoalX = goalIndex % wide;
+    var oldGoalY = (goalIndex - oldGoalX) / wide;
+    
+    goalIndex = ind;
+    updateSquare(mouseX, mouseY);
+    updateSquare(oldGoalX, oldGoalY);
+    
+    newSearch();
     
     return false;
 }
