@@ -21,7 +21,7 @@ const goal_node_color = "green";
 const select_node_color = "purple";
 
 // Normalize!
-const wall_density = 0;
+const wall_density = 1/7;
 
 // HTML5 stuff
 window.onload = init;
@@ -43,6 +43,8 @@ function init()
 {
     // Get the canvas element to display the game in.
     canvas = document.getElementById('display');
+    canvas.width = document.body.offsetWidth;
+    canvas.height = window.innerHeight - 150;
     
     // Get graphics contexts for the canvas elements
     canvasContext = canvas.getContext("2d");
@@ -197,6 +199,7 @@ function configureEventBindings()
     // Set up click handlers
     window.onmousemove = mouseHandler;
     window.onmousedown = mousedownHandler;
+    window.onresize = init;
 }
 
 function mousedownHandler(evt)
@@ -214,17 +217,15 @@ function mousedownHandler(evt)
     
     for (var i = length - 1; i > 0; i--)
     {
-        if (Math.random() > wall_density)
+        if (nodeArray[i] != not_traversable)
             nodeArray[i] = off_path;
-        else
-            nodeArray[i] = not_traversable;
     }
     
     var t0 = new Date();
     var n = astar({y:5, x:5}, {x:mouseX, y:mouseY});
     var t1 = new Date();
     
-    console.log("Search took "+ (t1-t0)+"ms.");
+    // console.log("Search took "+ (t1-t0)+"ms.");
     
     while (n.prev != null)
     {
@@ -347,56 +348,56 @@ function knightsActions(n, goal)
     i = 0;
     
     x = n.x - 1; y = n.y - 2;
-    if (x >= 0 && y >= 0)
+    if (x >= 0 && y >= 0 && nodeArray[x + y * wide] != not_traversable)
         ret[i] = {x:x, y:y};
     else
         ret[i] = null;
     
     i++;
     x = n.x + 1; y = n.y - 2;
-    if (x < wide && y >= 0)
+    if (x < wide && y >= 0 && nodeArray[x + y * wide] != not_traversable)
         ret[i] = {x:x, y:y};
     else
         ret[i] = null;
     
     i++;
     x = n.x - 1; y = n.y + 2;
-    if (x >= 0 && y < high)
+    if (x >= 0 && y < high && nodeArray[x + y * wide] != not_traversable)
         ret[i] = {x:x, y:y};
     else
         ret[i] = null;
     
     i++;
     x = n.x + 1; y = n.y + 2;
-    if (x < wide && y < high)
+    if (x < wide && y < high && nodeArray[x + y * wide] != not_traversable)
         ret[i] = {x:x, y:y};
     else
         ret[i] = null;
     
     i++;
     x = n.x - 2; y = n.y - 1;
-    if (x >= 0 && y >= 0)
+    if (x >= 0 && y >= 0 && nodeArray[x + y * wide] != not_traversable)
         ret[i] = {x:x, y:y};
     else
         ret[i] = null;
     
     i++;
     x = n.x - 2; y = n.y + 1;
-    if (x >= 0 && y < high)
+    if (x >= 0 && y < high && nodeArray[x + y * wide] != not_traversable)
         ret[i] = {x:x, y:y};
     else
         ret[i] = null;
     
     i++;
     x = n.x + 2; y = n.y - 1;
-    if (x < wide && y >= 0)
+    if (x < wide && y >= 0 && nodeArray[x + y * wide] != not_traversable)
         ret[i] = {x:x, y:y};
     else
         ret[i] = null;
     
     i++;
     x = n.x + 2; y = n.y + 1;
-    if (x < wide && y < high)
+    if (x < wide && y < high && nodeArray[x + y * wide] != not_traversable)
         ret[i] = {x:x, y:y};
     else
         ret[i] = null;
