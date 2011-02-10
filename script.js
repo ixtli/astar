@@ -221,10 +221,17 @@ function mousedownHandler(evt)
     }
     
     var t0 = new Date();
-    astar({y:5, x:5}, {x:mouseX, y:mouseY});
+    var n = astar({y:5, x:5}, {x:mouseX, y:mouseY});
     var t1 = new Date();
     
     console.log("Search took "+ (t1-t0)+"ms.");
+    
+    while (n.prev != null)
+    {
+        nodeArray[n.x + n.y * wide] = on_path;
+        n = n.prev;
+    }
+    
     updateMap();
     
     return false;
@@ -256,6 +263,7 @@ function astar(n, goal)
 {
     n.g = 0;
     n.cost = knightsMoveHeuristic(n, goal);
+    n.prev = null;
     
     frontier = [n];
     explored = [];
@@ -399,6 +407,7 @@ function knightsActions(n, goal)
         
         ret[i].g = 1 + n.g;
         ret[i].cost = ret[i].g + knightsMoveHeuristic(ret[i], goal);
+        ret[i].prev = n;
     }
     
     return ret;
