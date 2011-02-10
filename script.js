@@ -222,15 +222,27 @@ function mousedownHandler(evt)
     }
     
     var t0 = new Date();
-    var n = astar({y:5, x:5}, {x:mouseX, y:mouseY});
+    var result = astar({y:5, x:5}, {x:mouseX, y:mouseY});
     var t1 = new Date();
     
     // console.log("Search took "+ (t1-t0)+"ms.");
     
-    while (n.prev != null)
+    var e = result.e;
+    var tmp = null;
+    for (var i = 0; i < e.length; i++)
     {
-        nodeArray[n.x + n.y * wide] = on_path;
-        n = n.prev;
+        tmp = e[i];
+        nodeArray[e[i].x + (e[i].y*wide)] = expanded;
+    }
+    
+    var n = result.r;
+    if (n != null)
+    {
+        while (n.prev != null)
+        {
+            nodeArray[n.x + n.y * wide] = on_path;
+            n = n.prev;
+        }
     }
     
     updateMap();
@@ -276,11 +288,10 @@ function astar(n, goal)
     var temp = null;
     var found = 0;
     do {
-        if (frontier.length == 0) return false;
+        if (frontier.length == 0) return {r: null, e: explored};
         node = frontier.pop();
-        if (node.x == goal.x && node.y == goal.y) return node;
+        if (node.x == goal.x && node.y == goal.y) return {r: node, e:explored};
         explored.push(node);
-        nodeArray[node.x + (node.y*wide)] = expanded;
         expansion = knightsActions(node, goal);
         for (var i = 0; i < expansion.length; i++)
         {
