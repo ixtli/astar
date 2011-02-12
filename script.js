@@ -21,7 +21,7 @@ const goal_node_color = "green";
 const select_node_color = "purple";
 
 // Normalize!
-const wall_density = 1/5;
+const wall_density = 0;
 
 // HTML5 stuff
 window.onload = init;
@@ -68,7 +68,7 @@ function init()
             nodeArray[i] = not_traversable;
     }
     
-    startIndex = 5 + 5 * wide;
+    startIndex = 10 + 10 * wide;
     goalIndex = length - 1;
     
     updateMap();
@@ -214,7 +214,7 @@ function newSearch()
     }
     
     var t0 = new Date();
-    var result = astar({y:5, x:5}, {x:mouseX, y:mouseY});
+    var result = astar({y:10, x:10}, {x:mouseX, y:mouseY});
     var t1 = new Date();
     
     // console.log("Search took "+ (t1-t0)+"ms.");
@@ -230,6 +230,7 @@ function newSearch()
     var count = -1;
     if (result.r != null)
     {
+        //console.log("estimate: " + knightsMoveHeuristic({y:10, x:10}, {x:mouseX, y:mouseY}));
         var n = result.r;
         while (n.prev != null)
         {
@@ -243,7 +244,7 @@ function newSearch()
     document.getElementById('count').innerHTML = "Expanded nodes: "+ e.length +
         " / " + length;
     document.getElementById('path').innerHTML = "Path length: " + (count > -1 ?
-        count : "No path.");
+        count + 1: "No path.");
     
     updateMap();
 }
@@ -290,22 +291,22 @@ function manhattanDistance(x, g)
 
 function astar(n, goal)
 {
+    n.f = 0;
+    n.h = knightsMoveHeuristic(n, goal);
     n.g = 0;
-    n.cost = knightsMoveHeuristic(n, goal);
     n.prev = null;
     
     frontier = [n];
     explored = [];
     
-    var path_cost = 0;
     var node = null;
-    var expansion = new Array(8);
+    var expansion = [];
     var test = false;
     var temp = null;
-    var found = 0;
+    
     do {
-        if (frontier.length == 0) return {r: null, e: explored};
-        node = frontier.pop();
+
+        node = frontier.shift();
         if (node.x == goal.x && node.y == goal.y) return {r: node, e:explored};
         explored.push(node);
         expansion = knightsActions(node, goal);
@@ -314,58 +315,57 @@ function astar(n, goal)
             temp = expansion[i];
             if (temp == null) continue;
             
-            // Is child in explored or frontier?
-            test = false;
+            // Is child in explored?
+            test = -1;
             for (var j = 0; j < explored.length; j++)
             {
                 if (explored[j].x == temp.x && explored[j].y == temp.y)
                 {
-                    test = true;
+                    test = 1;
                     break;
                 }
             }
             
-            if (test == false)
+            if (test != -1) continue;
+            
+            // In frontier?
+            for (var j = 0; j < frontier.length; j++)
             {
+                if (frontier[j].x == temp.x && frontier[j].y == temp.y)
+                {
+                    test = j;
+                    break;
+                }
+            }
+            
+            // If not, add it
+            if (test == -1)
+            {
+                if (frontier.length == 0)
+                {
+                    frontier[0] = temp;
+                    continue;
+                }
                 
-                // In frontier?
+                // put this in the frontier
                 for (var j = 0; j < frontier.length; j++)
                 {
-                    if (frontier[j].x == temp.x && frontier[j].y == temp.y)
+                    if (temp.f < frontier[j].f)
                     {
-                        test = true;
-                        found = j;
+                        frontier.splice(j, 0, temp);
                         break;
                     }
                 }
-                
-                // If not, add it
-                if (test == false)
-                {
-                    if (frontier.length == 0)
-                    {
-                        frontier[0] = temp;
-                        continue;
-                    }
-                    
-                    // put this in the frontier
-                    for (var j = 0; j < frontier.length; j++)
-                    {
-                        if (temp.cost < frontier[j].cost)
-                        {
-                            frontier.splice(j, 0, temp);
-                            break;
-                        }
-                    }
-                } else {
-                    // is in frontier but not in explored
-                    if (temp.cost < frontier[found].cost)
-                        frontier[found] = temp;
-                }
+            } else {
+                // is in frontier but not in explored
+                if (temp.f < frontier[test].f)
+                    frontier[test] = temp;
             }
         }
         
-    } while (true);
+    } while (frontier.length != 0);
+    
+    return {r: null, e: explored};
 }
 
 function knightsActions(n, goal)
@@ -429,13 +429,16 @@ function knightsActions(n, goal)
     else
         ret[i] = null;
     
+    var t = null;
     for (var i = 0; i < ret.length; i++)
     {
-        if (ret[i] == null) continue;
+        t = ret[i];
+        if (t == null) continue;
         
-        ret[i].g = 1 + n.g;
-        ret[i].cost = ret[i].g + knightsMoveHeuristic(ret[i], goal);
-        ret[i].prev = n;
+        t.g = manhattanDistance(n,t);
+        t.h = knightsMoveHeuristic(t, goal);
+        t.f = t.g + t.h;
+        t.prev = n;
     }
     
     return ret;
@@ -444,14 +447,17 @@ function knightsActions(n, goal)
 function knightsMoveHeuristic(x, g)
 {
     // Return the amount of moves from location x to g
-    dist = manhattanDistance(x, g);
+    var dist = manhattanDistance(x, g);
     
     // We're not the same node, are we?
-    if ( dist == 0 ) return 0;
+    if (dist == 0) return 0;
     
     // Magic!
     var quot = Math.floor(dist / 3);
-    if (dist > 3) dist % 3;
+    if (dist > 3)
+        dist % 3;
+    else
+        quot = 0;
     
     switch (dist)
     {
