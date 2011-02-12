@@ -305,7 +305,6 @@ function astar(n, goal)
     var temp = null;
     
     do {
-
         node = frontier.shift();
         if (node.x == goal.x && node.y == goal.y) return {r: node, e:explored};
         explored.push(node);
@@ -338,31 +337,47 @@ function astar(n, goal)
                 }
             }
             
-            // If not, add it
-            if (test == -1)
+            // if so...
+            if (test != -1)
             {
-                if (frontier.length == 0)
+                // is it closer to the goal?
+                if (temp.g < frontier[test].g)
                 {
-                    frontier[0] = temp;
-                    continue;
-                }
-                
-                // put this in the frontier
-                for (var j = 0; j < frontier.length; j++)
-                {
-                    if (temp.f < frontier[j].f)
+                    // if not remove it and add this one in place
+                    frontier.splice(test,1);
+                    for (var j = 0; j < frontier.length; j++)
                     {
-                        frontier.splice(j, 0, temp);
-                        break;
+                        if (temp.f < frontier[j].f)
+                        {
+                            frontier.splice(j, 0, temp);
+                            temp = null;
+                            break;
+                        }
                     }
+                    if (temp != null) frontier.push(temp);
                 }
-            } else {
-                // is in frontier but not in explored
-                if (temp.f < frontier[test].f)
-                    frontier[test] = temp;
+                continue;
             }
+            
+            // If not, add it
+            if (frontier.length == 0)
+            {
+                frontier[0] = temp;
+                continue;
+            }
+            
+            // put this in the frontier
+            for (var j = 0; j < frontier.length; j++)
+            {
+                if (temp.f < frontier[j].f)
+                {
+                    frontier.splice(j, 0, temp);
+                    temp != null;
+                    break;
+                }
+            }
+            if (temp != null) frontier.push(temp);
         }
-        
     } while (frontier.length != 0);
     
     return {r: null, e: explored};
@@ -435,7 +450,7 @@ function knightsActions(n, goal)
         t = ret[i];
         if (t == null) continue;
         
-        t.g = manhattanDistance(n,t);
+        t.g = n.g + 1;
         t.h = knightsMoveHeuristic(t, goal);
         t.f = t.g + t.h;
         t.prev = n;
